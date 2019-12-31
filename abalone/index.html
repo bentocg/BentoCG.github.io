@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset='utf-8'>
+	<title></title>
+	<meta name="description" content="">
+	<meta name="author" content="">
+	<meta name="generator" content="slidify" />
+	
+	<!-- LOAD STYLE SHEETS -->
+	<link rel="stylesheet" href="libraries/frameworks/html5slides/default/styles.css">
+	<link rel="stylesheet" href="libraries/highlighters/prettify/css/tomorrow.css" />  <link rel="stylesheet" href = "assets/css/ribbons.css">
+  
+</head>
+<body style='display: none'>
+	<section class='slides layout-regular template-regular'>
+     <article class="" id="slide-1" style="background:;">
+  <h3>Find out the gender of your abalone!</h3>
+  <p><em>A comprehensive tool for sexing your abalone</em></p>
+
+<hr>
+
+</article>
+
+<article class="" id="slide-2" style="background:;">
+  <h3>Have you ever wondered about which name you would give to your pet abalone but couldn&#39;t figure out if it was a &#39;he&#39; or a &#39;she&#39;?</h3>
+  <hr>
+
+<p><br><br></p>
+
+<h3>Your problems are now (rather unsuccesfully) solved!</h3>
+
+<blockquote>
+<p>Measure your abalone carefully, input the values in the application and you should have a good idea about its gender.</p>
+</blockquote>
+
+</article>
+
+<article class="" id="slide-3" style="background:;">
+  <h3>Dataset used</h3>
+  <hr>
+
+<blockquote>
+<p>This predictive model is based on the famous &#39;Abalone&#39; dataset, found in the UCI machine learning
+repository.
+To take a peek at the dataset, execute the following code chunk on R:</p>
+</blockquote>
+
+<pre><code class="r">require(AppliedPredictiveModeling)
+data(abalone)
+summary(abalone)
+</code></pre>
+
+</article>
+
+<article class="" id="slide-4" style="background:;">
+  <h3>Prediction model</h3>
+  <hr>
+
+<blockquote>
+<p>The model uses a boosting method on the caret package to predict the gender based on 5 other parameters (though the dataset has 3 more parameters, I decided to remove them from the model because it is necessary to
+kill the abalone before measuring them, and we don&#39;t want them killed.)</p>
+</blockquote>
+
+<pre><code class="r">#Separate data into training and test sets.
+inTrain = createDataPartition(abalone$Type, p = 0.9, list = FALSE)
+training = abalone[inTrain,]
+testing = abalone[-inTrain,]
+#set the seed for reproducibility
+set.seed(132)
+#I&#39;ve tried several methods and boosting was the most efficient.
+trControl = trainControl(method = &quot;cv&quot;, number = 4, allowParallel =TRUE)
+modFit = train(Type ~ ., method = &quot;gbm&quot;, data = training,trControl = trControl, 
+verbose = FALSE)
+</code></pre>
+
+</article>
+
+<article class="" id="slide-5" style="background:;">
+  <h3>Evaluated expression</h3>
+  <hr>
+
+<blockquote>
+<p>This is the expression that gets evaluated in  server.R when you input your measurements on the sliders:</p>
+</blockquote>
+
+<pre><code class="r">#createRow is a helper function that transforms the input into suitable data for the model 
+   t = reactive({x = as.character(predict(modFit, createRow(c(input$LongestShell, input$Diameter, 
+                                               input$Height, input$WholeWeight, input$Rings))))                                             
+   if( x == &quot;M&quot;){
+       z = &quot;it&#39;s probably a boy!&quot;}
+   else if( x == &quot;F&quot;){
+       z = &quot;it&#39;s probably a girl!&quot;}
+   else{
+       z = &quot;it&#39;s probably still an imature.&quot;}
+   })
+   output$gender = renderText({t()})
+</code></pre>
+
+</article>
+
+  </section>
+</body>
+  <!-- LOAD JAVASCRIPTS  -->
+	<script src='libraries/frameworks/html5slides/default/slides.js'></script>
+	<!-- Google Prettify -->
+	<script src="http://cdnjs.cloudflare.com/ajax/libs/prettify/188.0.0/prettify.js"></script>
+	<script src='libraries/highlighters/prettify/js/lang-r.js'></script>
+	<script>
+	  var pres = document.getElementsByTagName("pre");
+	  for (var i=0; i < pres.length; ++i) {
+	    pres[i].className = "prettyprint linenums";
+	  }
+	  prettyPrint();
+	</script>
+	<!-- End Google Prettify --> 
+	</html>
